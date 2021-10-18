@@ -1,21 +1,18 @@
 const fs = require("fs");
 const { dirname } = require("path");
 const path = require('path');
-let a=1;
 
 function findTreasureSync(roomPath) {
-    fs.access(path.relative(__dirname , roomPath), fs.R_OK , (err) => {
-        if (!err) {
-            if (!roomPath.includes(".json")) {
-                const fileContent = fs.readdirSync(path.relative(__dirname , roomPath))
-                fileContent.forEach((path) => {
-                    openChestSync(roomPath + "/" + path)
+    fs.access(path.relative(__dirname , roomPath), fs.R_OK , (err) => { // checks if it is a valdi path
+        if (!err) { // valid
+            if (!roomPath.includes(".json")) { 
+                const fileContent = fs.readdirSync(path.relative(__dirname , roomPath)) // read dir
+                fileContent.forEach((path) => { // go through all the files in the directory
+                    openChestSync(roomPath + "/" + path) // check chests
             })}
             else {
-                if (a<15){
-                    openChestSync(roomPath)
+                    openChestSync(roomPath) // read json
                 }
-            }
         }
         else {
             console.log("error")
@@ -26,14 +23,14 @@ function findTreasureSync(roomPath) {
 
 function openChestSync(chestPath) {
     try {
-    const fileContent = JSON.parse(fs.readFileSync(path.relative(__dirname , chestPath)))
-    if (fileContent.clue) {
-        findTreasureSync(fileContent.clue)
+        const fileContent = JSON.parse(fs.readFileSync(path.relative(__dirname , chestPath))) // valid json
+        if (fileContent.clue) {
+            findTreasureSync(fileContent.clue)
+        }
+        if (fileContent.treasure) {
+            console.log("MONEY");
+        }
     }
-    if (fileContent.treasure) {
-        console.log("MONEY");
-    }
-}
     catch {
         if(!chestPath.includes(".json")){
             findTreasureSync(chestPath)
