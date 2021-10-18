@@ -1,13 +1,26 @@
-const fs = require("fs")
+const fs = require("fs");
+const { dirname } = require("path");
 const path = require('path');
-
+let a=1;
 
 function findTreasureSync(roomPath) {
-    const fileContent = fs.readdirSync(path.relative(__dirname , roomPath))
-    console.log(fileContent)
-    fileContent.forEach((path) => {
-        openChestSync(roomPath + "/" + path)
-    }) 
+    fs.access(path.relative(__dirname , roomPath), fs.R_OK , (err) => {
+        if (!err) {
+            if (!roomPath.includes(".json")) {
+                const fileContent = fs.readdirSync(path.relative(__dirname , roomPath))
+                fileContent.forEach((path) => {
+                    openChestSync(roomPath + "/" + path)
+            })}
+            else {
+                if (a<15){
+                    openChestSync(roomPath)
+                }
+            }
+        }
+        else {
+            console.log("error")
+        }
+    })
      
 }
 
@@ -18,11 +31,13 @@ function openChestSync(chestPath) {
         findTreasureSync(fileContent.clue)
     }
     if (fileContent.treasure) {
-        return fileContent.treasure;
+        console.log("MONEY");
     }
 }
     catch {
-    findTreasureSync(chestPath)
+        if(!chestPath.includes(".json")){
+            findTreasureSync(chestPath)
+        }
     }
 }
 
