@@ -1,7 +1,6 @@
 const fs = require("fs");
 const path = require("path");
 const generateMaze = require("./maze_generator/mazeGenerator");
-//generateMaze("mazeX", 5, 5, 22);
 
 function findTreasureASync(roomPath, callback) {
   fs.access(path.resolve(__dirname, roomPath), fs.R_OK, (err) => {
@@ -29,21 +28,19 @@ function findTreasureASync(roomPath, callback) {
               return;
             }
             if (stats.isFile()) {
-              //console.log(path.resolve(roomPath, file))
               openChestASync(
                 path.resolve(roomPath, file),
                 (err, truessure) => {
-                  //console.log(truessure)
                   if (!err) {
                     callback(null, truessure);
-                    returcn;
+                    return;
                   }
                 }
               );
             }
           });
         }
-        callback("Cant find");
+        callback(`Cant find tresure in ${files}`);
       });
     });
   });
@@ -60,20 +57,23 @@ function openChestASync(chestPath, callback) {
       const { treasure, clue } = JSON.parse(data);
       if (clue) {
         const rommPath = clue;
-        findTreasureASync(rommPath, (err, truessure) => {
+        findTreasureASync(rommPath, (err, treasure) => {
           if (err) {
             callback(err);
             return;
           }
-          callback(undefined, truessure);
+          callback(undefined, treasure);
           return;
         });
       }
       if (treasure) {
-        // fs.appendFile("map.txt", "money", (err) => {
-        console.log("tresure")
-        callback(null, truessure);
-        return;
+        fs.appendFile("map.txt", "money", (err) => {
+          if(!err) {
+            console.log("tresure")
+            callback(null, treasure);
+            return;
+          }
+        })
       }
     } catch {
       callback("cant open");
@@ -81,18 +81,6 @@ function openChestASync(chestPath, callback) {
     }
   });
 } // valid json
-
-const cb1 = (err, data) => {
-  if (!err) {
-    openChestASync(data, cb2);
-  }
-};
-
-const cb2 = (err, data) => {
-  if (!err) {
-    findTreasureASync(data, cb1);
-  }
-};
 
 findTreasureASync("mazeX", (err, treasure) => {
   if (err) {
