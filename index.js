@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const generateMaze = require("./maze_generator/mazeGenerator");
-//generateMaze("maze-1", 5, 5, 22);
+generateMaze("maze-1", 5, 5, 22);
 
 
 function findTreasureASync(roomPath , callback){
@@ -15,17 +15,23 @@ function findTreasureASync(roomPath , callback){
             console.log(err)
           }
           else {
-            fs.appendFile("map.txt", (`.${roomPath.split("mazeX")[1]}\n`) , (err) => {
+            fs.appendFile("map.txt", (`.${roomPath.split("maze-1")[1]}\n`) , (err) => {
               if(!err) {
                   files.forEach((dirName) => {
-                  const stats = fs.statSync(path.resolve(roomPath ,dirName))
-                  if (!stats.isDirectory()) {
-                  openChestSync(path.resolve(roomPath , dirName)) // check chests
-              }
+                  const stats = fs.stat(path.resolve(roomPath ,dirName), (err ,stats) => {
+                    if(err) {
+                      console.log("NO STATS")
+                    }
+                    else {
+                      if (!stats.isDirectory()) {
+                        callback(undefined , path.resolve(roomPath , dirName)) // check chests
+                    }
+                      
+                    }
+                  })
             });
           }
         })
-
           }
         }); // read dir
     }
@@ -37,38 +43,52 @@ function findTreasureASync(roomPath , callback){
   }
 }
 
-
-function findTreasureSync(roomPath) {
-  // TODO: change to fs.accessSync
+function openChestASync(chestPath , callback) {
   try {
-    fs.accessSync(path.resolve(__dirname, roomPath) , fs.R_OK)
-      const dirContent = fs.readdirSync(path.relative(__dirname, roomPath)); // read dir
-        fs.appendFileSync("map.txt", (`.${roomPath.split("mazeX")[1]}\n`));
-        dirContent.forEach((dirName) => {
-        const stats = fs.statSync(path.resolve(roomPath ,dirName))
-        if (!stats.isDirectory()) {
-          openChestSync(path.resolve(roomPath , dirName)) // check chests
+      fs.readFile(path.relative(__dirname, chestPath) , 'utf-8',(err ,data) => {
+        if(err) {
+          console.log("Cannot Read File")
         }
-      })
-    }
-  catch {
-  }}
+        else {
+          try {
+            const fileContent = JSON.parse(data)
+            if (fileContent.clue) {
+              callback(undefined , fileContent.clue)
+            }
+            if (fileContent.treasure) {
+              fs.appendFile("map.txt", "money" , (err) => {
+                if (!err) {
+                  return;
+                }
+                
+              });
+            }
+            
+          }
+          catch{
+            console.log("NOT A VALID JSON")
+          }
+      
+        }
+      }
 
-function openChestSync(chestPath) {
-  try {
-    const fileContent = JSON.parse(
-      fs.readFileSync(path.relative(__dirname, chestPath))
     ); // valid json
-    if (fileContent.clue) {
-      findTreasureASync(fileContent.clue);
-    }
-    //console.log(fileContent)
-    if (fileContent.treasure) {
-      fs.appendFileSync("map.txt", "money");
-    }
   } catch {
-    //console.log(chestPath)
+    console.log("not valid file")
   }
 }
 
-findTreasureASync("mazeX")
+const cb1 = (err ,data) => {
+  if (!err) {
+    openChestASync(data , cb2)
+  }
+}
+
+const cb2 = (err,data) => {
+  if (!err) {
+    findTreasureASync(data , cb1)
+  }
+}
+
+findTreasureASync("maze-1" , cb1)
+
